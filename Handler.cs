@@ -67,7 +67,7 @@ namespace BreedersScenarioAnalyzer
             }
             // 设施点数
             var enhancePoint = dataset.predict_enhance_point + dataset.having_enhance_point;
-            var required = RequiredPoints[Math.Min(turn.Turn / 12, 4)];
+            var required = RequiredPoints[Math.Min((turn.Turn-1) / 12, 4)];
             var sty = new Style(foreground: Color.Red1);
             if (enhancePoint >= required + 5)
             {
@@ -77,14 +77,14 @@ namespace BreedersScenarioAnalyzer
             {
                 sty = new Style(foreground: Color.Yellow);
             }
-            layout["设施点数"].Update(new Panel(new Text($"下一轮升级点数: {enhancePoint}", sty)).Expand());
+            layout["设施点数"].Update(new Panel(new Text($"当前升级点数: {enhancePoint}", sty)).Expand());
             // 设施等级
             if (datasetLoad != null)
             {
                 TeamReviewResult = datasetLoad.team_review_result_array;
                 EnhanceGroups = datasetLoad.enhance_group_array;
             }
-            else if (EnhanceGroups.Count() == 0 && turn.Turn > 4)
+            else if (EnhanceGroups.Count() == 0 && turn.Turn >= 3)
             {
                 critInfos.Add($"[red]警告：缺少剧本Buff等级信息，需要从游戏主界面重新进入育成[/]");
             }
