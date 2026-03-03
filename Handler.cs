@@ -3,6 +3,7 @@ using Gallop;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Text;
 using UmamusumeResponseAnalyzer;
 using UmamusumeResponseAnalyzer.Game;
@@ -14,7 +15,19 @@ namespace BreedersScenarioAnalyzer
 {
     public static class Handler
     {
-        public static void ParseOnsenCommandInfo(SingleModeCheckEventResponse @event)
+        /// <summary>
+        /// 载入游戏时保存的作战会议评价
+        /// </summary>
+        public static SingleModeBreederTeamReviewResult[] TeamReviewResult = [];
+        /// <summary>
+        /// 载入游戏时保存的设施等级
+        /// </summary>
+        public static SingleModeBreederEnhanceGroup[] EnhanceGroups = [];
+        /// <summary>
+        /// 每阶段需要攒的升级点数
+        /// </summary>
+        public static readonly int[] RequiredPoints = { 10, 15, 15, 15, 10 }; 
+        public static void ParseBreederCommandInfo(SingleModeCheckEventResponse @event)
         {
             var stage = @event.GetCommandInfoStage();
             var layout = new Layout().SplitColumns(
@@ -26,10 +39,10 @@ namespace BreedersScenarioAnalyzer
                         new Layout("干劲").Ratio(3)).Size(3),
                     new Layout("重要信息").Size(5),
                     new Layout("剧本信息").SplitColumns(
-                        new Layout("温泉券").Ratio(1),
-                        new Layout("温泉Buff").Ratio(1),
-                        new Layout("特殊训练").Ratio(1),
-                        new Layout("挖掘进度").Ratio(1)
+                        new Layout("SP训练").Ratio(1),
+                        new Layout("设施点数").Ratio(1),
+                        new Layout("设施等级").Ratio(1),
+                        new Layout("队伍评级").Ratio(1)
                         ).Size(3),
                     //new Layout("分割", new Rule()).Size(1),
                     new Layout("训练信息")  // size 20, 共约30行
@@ -39,9 +52,48 @@ namespace BreedersScenarioAnalyzer
             var noTrainingTable = false;
             var critInfos = new List<string>();
             var turn = new TurnInfoBreeders(@event.data);
-            layout["特殊训练"].Update(new Panel($"{string.Join(string.Empty, Enumerable.Repeat("●", turn.SpecialTrainingStock))}{(turn.SpecialTraningActivated ? "[green]●[/]" : string.Empty)}{string.Join(string.Empty, Enumerable.Repeat("○", turn.SpecialTrainingMax - turn.SpecialTrainingStock - (turn.SpecialTraningActivated ? 1 : 0)))}").Expand());
+            
+            //layout["SP训练"].Update(new Panel($"{string.Join(string.Empty, Enumerable.Repeat("●", turn.SpecialTrainingStock))}{(turn.SpecialTraningActivated ? "[green]●[/]" : string.Empty)}{string.Join(string.Empty, Enumerable.Repeat("○", turn.SpecialTrainingMax - turn.SpecialTrainingStock - (turn.SpecialTraningActivated ? 1 : 0)))}").Expand());
             var dataset = @event.data.breeders_data_set;
-
+            var datasetLoad = @event.data.breeders_data_set_load;
+            // SP训练
+            if (turn.SpecialTrainingActivated)
+            {
+                layout["SP训练"].Update(new Panel($"[lime]SP训练启动[/]").Expand());
+            }
+            else
+            {
+                layout["SP训练"].Update(new Panel($"SP训练: {turn.SpecialTrainingStock} / {turn.SpecialTrainingMax}").Expand());
+            }
+            // 设施点数
+            var enhancePoint = dataset.predict_enhance_point + dataset.having_enhance_point;
+            var required = RequiredPoints[Math.Min(turn.Turn / 12, 4)];
+            var sty = new Style(foreground: Color.Red1);
+            if (enhancePoint >= required + 5)
+            {
+                sty = new Style(foreground: Color.Lime);
+            }
+            else if (enhancePoint >= required)
+            {
+                sty = new Style(foreground: Color.Yellow);
+            }
+            layout["设施点数"].Update(new Panel(new Text($"下一轮升级点数: {enhancePoint}", sty)).Expand());
+            // 设施等级
+            if (datasetLoad != null)
+            {
+                TeamReviewResult = datasetLoad.team_review_result_array;
+                EnhanceGroups = datasetLoad.enhance_group_array;
+            }
+            else if (EnhanceGroups.Count() == 0 && turn.Turn > 4)
+            {
+                critInfos.Add($"[red]警告：缺少剧本Buff等级信息，需要从游戏主界面重新进入育成[/]");
+            }
+            if (EnhanceGroups.Count() > 0)
+            {
+                layout["设施等级"].Update(new Panel($"设施等级: {String.Join(" ", EnhanceGroups.Select(x => x.level))}").Expand());
+            }
+            // 队伍等级
+            layout["队伍评级"].Update(new Panel($"队伍评级: {TurnInfoBreeders.TeamMemberRank[dataset.team_rank - 1]}").Expand());
             if (GameStats.currentTurn != turn.Turn - 1 //正常情况
                 && GameStats.currentTurn != turn.Turn //重复显示
                 && turn.Turn != 1 //第一个回合
@@ -73,10 +125,10 @@ namespace BreedersScenarioAnalyzer
                 EventLogger.Update(@event);
             }
             // T3 在EventLogger更新后需要开始捕获体力消耗
-            if (turn.Turn == 3)
-            {
-                EventLogger.captureVitalSpending = true;
-            }
+            //if (turn.Turn == 3)
+            //{
+            //    EventLogger.captureVitalSpending = true;
+            //}
             var trainItems = new Dictionary<int, SingleModeCommandInfo>
             {
                 { 101, @event.data.home_info.command_info_array[0] },
@@ -265,9 +317,9 @@ namespace BreedersScenarioAnalyzer
                     }}");
                     table.AddRow(new Rule());
 
-                    var members = turn.CommandTeamMemmberInfoDictionary[command.CommandId].Select(x => turn.TeamMemberInfoDictionary[x.chara_id]);
+                    var members = turn.CommandTeamMemberInfoDictionary[command.CommandId].Select(x => turn.TeamMemberInfoDictionary[x.chara_id]);
 
-                    table.AddRow($"Lv{command.TrainLevel} | {string.Join(',', members.Select(x => x.Position))}");
+                    table.AddRow($"Lv{command.TrainLevel}");
                     table.AddRow(new Rule());
 
                     var stats = trainStats[command.TrainIndex - 1];
@@ -277,13 +329,17 @@ namespace BreedersScenarioAnalyzer
                     else
                         table.AddRow($"{I18N_StatSimple}:{score}|Pt:{stats.PtGain}");
 
+                    var personCount = command.TrainingPartners.Count() + members.Count();
                     foreach (var trainingPartner in command.TrainingPartners)
                     {
                         table.AddRow(trainingPartner.Name);
                         if (trainingPartner.Shining)
                             table.BorderColor(Color.LightGreen);
                     }
-                    for (var i = 5 - command.TrainingPartners.Count(); i > 0; i--)
+                    // 同时列出小头, 总行数增加到8
+                    foreach (var m in members)
+                        table.AddRow(m.Explain);
+                    for (var i = 8 - personCount; i > 0; i--)
                     {
                         table.AddRow(string.Empty);
                     }
@@ -315,6 +371,27 @@ namespace BreedersScenarioAnalyzer
                 foreach (var row in eventPerf)
                     exTable.AddRow(new Markup(row));
             }
+            // 其他动作信息
+            foreach (var item in dataset.command_gain_exp_array)
+            {
+                var name = item.command_type switch
+                {
+                    3 => "普通出行",
+                    4 => "比赛",
+                    7 => "休息",
+                    8 => "治病",
+                    _ => item.command_type.ToString()
+                };
+                exTable.AddRow($"{name}: +{item.gain_exp}");
+            }
+            if (dataset.link_friend_outing_member_info_array != null && dataset.link_friend_outing_member_info_array.Count() > 0)
+            {
+                exTable.AddRow("友人出行:");
+                foreach (var item in dataset.link_friend_outing_member_info_array)
+                {
+                    exTable.AddRow($"{Database.Names.GetCharacter(item.chara_id).Nickname}: +{item.gain_exp}");
+                }
+            }
 
             layout["日期"].Update(new Panel($"{turn.Year}{I18N_Year} {turn.Month}{I18N_Month}{turn.HalfMonth}").Expand());
             layout["总属性"].Update(new Panel($"[cyan]总属性: {totalValue}, Pt: {@event.data.chara_info.skill_point}[/]").Expand());
@@ -332,7 +409,7 @@ namespace BreedersScenarioAnalyzer
             var availableTrainingCount = @event.data.home_info.command_info_array.Count(x => x.is_enable == 1);
             if (availableTrainingCount <= 1)
             {
-                critInfos.Add("[aqua]非训练回合[/]");
+                critInfos.Add($"[aqua]非训练回合 playingState = {@event.data.chara_info.playing_state}[/]");
             }
             if (@event.data.chara_info.skill_point > 9500)
             {
@@ -349,7 +426,7 @@ namespace BreedersScenarioAnalyzer
             if (noTrainingTable)
                 AnsiConsole.Cursor.SetPosition(0, 15);
             else
-                AnsiConsole.Cursor.SetPosition(0, 31);
+                AnsiConsole.Cursor.SetPosition(0, 35);
         }
     }
 }

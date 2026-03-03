@@ -4,6 +4,8 @@ using Spectre.Console;
 using System.IO.Compression;
 using UmamusumeResponseAnalyzer;
 using UmamusumeResponseAnalyzer.Plugin;
+using UmamusumeResponseAnalyzer.Game.TurnInfo;
+using MessagePack.Formatters;
 
 namespace BreedersScenarioAnalyzer
 {
@@ -63,7 +65,7 @@ namespace BreedersScenarioAnalyzer
             {
                 var @event = jo.ToObject<Gallop.SingleModeCheckEventResponse>();
                 if ((@event.data.unchecked_event_array != null && @event.data.unchecked_event_array.Length > 0) || @event.data.race_start_info != null) return;
-                Handler.ParseOnsenCommandInfo(@event);
+                Handler.ParseBreederCommandInfo(@event);
             }
         }
     }
@@ -77,6 +79,27 @@ namespace BreedersScenarioAnalyzer
                 2 => "中",
                 3 => "下"
             };
+
+            public string Name => Database.Names.GetCharacter(charaInfo.chara_id).Nickname;
+
+            public string Rank => TurnInfoBreeders.TeamMemberRank[charaInfo.rank - 1];
+
+            public string Explain
+            {
+                get
+                {
+                    var char_text = charaInfo.Name;
+                    var exp_text = $"{charaInfo.Rank}{charaInfo.exp}";
+                    if (charaInfo.exp == 3)
+                    {
+                        return $"[lightslateblue]{char_text}{exp_text}[/]";
+                    }
+                    else
+                    {
+                        return $"[dodgerblue1]{char_text}[/]{exp_text}";
+                    }
+                }
+            }
         }
     }
 }
