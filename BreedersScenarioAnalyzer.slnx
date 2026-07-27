@@ -1,5 +1,3 @@
 <Solution>
-  <Project Path="../../UmaAIConnector/UmamusumeResponseAnalyzer/UmamusumeResponseAnalyzer.csproj" />
-  <Project Path="../EventLoggerPlugin/EventLoggerPlugin.csproj" />
   <Project Path="BreedersScenarioAnalyzer.csproj" />
 </Solution>
