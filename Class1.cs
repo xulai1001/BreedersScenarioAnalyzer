@@ -1,15 +1,14 @@
 using Gallop;
 using Gallop.Endpoints;
 using UmamusumeResponseAnalyzer;
-using UmamusumeResponseAnalyzer.LiveDisplay;
+using UmamusumeResponseAnalyzer.TerminalGui;
 using UmamusumeResponseAnalyzer.Plugin;
 
 namespace BreedersScenarioAnalyzer;
 
 public sealed class BreedersScenarioAnalyzer : IPlugin
 {
-    ILiveDisplayOutput? liveDisplay;
-    LiveDisplayWorkspace? workspace;
+    Workspace? workspace;
     Handler? handler;
     bool hasPublishedTrainingPanel;
 
@@ -21,19 +20,17 @@ public sealed class BreedersScenarioAnalyzer : IPlugin
 
     public void Initialize(IPluginContext context)
     {
-        liveDisplay = context.LiveDisplay;
         handler = new();
         hasPublishedTrainingPanel = false;
     }
 
     public void Dispose()
     {
-        if (liveDisplay is not null && workspace is not null)
-            liveDisplay.RemoveWorkspace(workspace);
-
-        liveDisplay = null;
-        workspace = null;
         handler = null;
+        if (!hasPublishedTrainingPanel)
+            return;
+
+        workspace!.RemovePanel("training");
         hasPublishedTrainingPanel = false;
     }
 
@@ -47,8 +44,8 @@ public sealed class BreedersScenarioAnalyzer : IPlugin
             return ValueTask.CompletedTask;
 
         var content = Analyzer.ParseBreederCommandInfo(response);
-        LiveDisplay.SetPanel(
-            Workspace,
+        var workspace = this.workspace ??= Workspace.Create("BreedersScenarioAnalyzer");
+        workspace.SetPanel(
             "training",
             "训练分析",
             content,
@@ -64,12 +61,6 @@ public sealed class BreedersScenarioAnalyzer : IPlugin
         Analyzer.Load(response);
         return ValueTask.CompletedTask;
     }
-
-    ILiveDisplayOutput LiveDisplay => liveDisplay
-        ?? throw new InvalidOperationException("BreedersScenarioAnalyzer 尚未初始化 LiveDisplay。");
-
-    LiveDisplayWorkspace Workspace => workspace
-        ??= LiveDisplay.CreateWorkspace("BreedersScenarioAnalyzer");
 
     Handler Analyzer => handler
         ?? throw new InvalidOperationException("BreedersScenarioAnalyzer 尚未初始化 analyzer。");

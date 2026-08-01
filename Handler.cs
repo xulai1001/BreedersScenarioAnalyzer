@@ -1,6 +1,6 @@
 using Gallop;
 using UmamusumeResponseAnalyzer;
-using UmamusumeResponseAnalyzer.LiveDisplay;
+using UmamusumeResponseAnalyzer.TerminalGui;
 using static BreedersScenarioAnalyzer.i18n.Game;
 
 namespace BreedersScenarioAnalyzer;
@@ -19,7 +19,7 @@ public sealed class Handler
         enhanceLevels = [.. groups.Select(x => x.level)];
     }
 
-    public LiveDisplayContent ParseBreederCommandInfo(SingleModeBreedersCheckEventResponse response)
+    public WorkspaceContent ParseBreederCommandInfo(SingleModeBreedersCheckEventResponse response)
     {
         var stage = response.GetCommandInfoStage();
         var data = response.data;
@@ -230,6 +230,6 @@ public sealed class Handler
             lines.AddRange(extraRows);
         }
 
-        return LiveDisplayContent.Text(string.Join(Environment.NewLine, lines));
+        return WorkspaceContent.Text(string.Join(Environment.NewLine, lines));
     }
 }
