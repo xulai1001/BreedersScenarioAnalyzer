@@ -6,8 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Version>2026.03.04</Version>
+    <PluginInternalName>BreedersScenarioAnalyzer</PluginInternalName>
     <PluginAuthor>UmamusumeResponseAnalyzer</PluginAuthor>
     <PluginDisplayName>梦想杯剧本解析器</PluginDisplayName>
+    <PluginRepositoryUrl>https://github.com/URA-Plugins/BreedersScenarioAnalyzer</PluginRepositoryUrl>
     <PluginTargets>Cygames</PluginTargets>
   </PropertyGroup>
 

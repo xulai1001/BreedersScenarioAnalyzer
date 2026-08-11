@@ -12,12 +12,6 @@ public sealed class BreedersScenarioAnalyzer : IPlugin
     Handler? handler;
     bool hasPublishedTrainingPanel;
 
-    public string Name => "梦想杯剧本解析器";
-
-    public string Author => "UmamusumeResponseAnalyzer";
-
-    public string[] Targets => ["Cygames"];
-
     public void Initialize(IPluginContext context)
     {
         handler = new();
@@ -70,7 +64,7 @@ public static class BreedersExtensions
 {
     extension(SingleModeBreedersTeamMemberInfo charaInfo)
     {
-        public string Name => Database.Names.GetCharacter(charaInfo.chara_id).Nickname;
+        public string Name => Database.Names.DisplayNickname(charaInfo.chara_id);
 
         public string Rank => TurnInfoBreeders.TeamMemberRank[charaInfo.rank - 1];
 

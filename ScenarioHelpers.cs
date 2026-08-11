@@ -52,10 +52,10 @@ public sealed class TrainingPartner
         int position,
         SingleModeCommandInfo command)
     {
-        var rawName = position is >= 1 and <= 6
-            ? Database.Names.GetSupportCard(
-                response.chara_info.support_card_array.First(x => x.position == position).support_card_id).Nickname
-            : Database.Names.GetCharacter(position).Nickname;
+        var nameId = position is >= 1 and <= 6
+            ? response.chara_info.support_card_array.First(x => x.position == position).support_card_id
+            : position;
+        var rawName = Database.Names.DisplayNickname(nameId);
         var friendship = response.chara_info.evaluation_info_array.FirstOrDefault(x => x.target_id == position)?.evaluation ?? 0;
 
         Priority = position is >= 1 and <= 6 ? 0 : 1;

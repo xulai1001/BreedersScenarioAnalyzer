@@ -221,7 +221,7 @@ public sealed class Handler
         {
             extraRows.Add("友人出行:");
             extraRows.AddRange(dataset.link_friend_outing_member_info_array.Select(
-                x => $"  {Database.Names.GetCharacter(x.chara_id).Nickname}: +{x.gain_exp}"));
+                x => $"  {Database.Names.DisplayNickname(x.chara_id)}: +{x.gain_exp}"));
         }
 
         if (extraRows.Count > 0)
