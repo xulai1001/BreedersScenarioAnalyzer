@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsUraPlugin>true</IsUraPlugin>
@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="UmamusumeResponseAnalyzer" Version="2026.9.1" />
+    <PackageReference Include="UmamusumeResponseAnalyzer" Version="*" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
