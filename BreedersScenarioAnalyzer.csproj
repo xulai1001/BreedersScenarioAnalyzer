@@ -10,7 +10,6 @@
     <PluginAuthor>UmamusumeResponseAnalyzer</PluginAuthor>
     <PluginDisplayName>梦想杯剧本解析器</PluginDisplayName>
     <PluginRepositoryUrl>https://github.com/URA-Plugins/BreedersScenarioAnalyzer</PluginRepositoryUrl>
-    <PluginTargets>Cygames</PluginTargets>
   </PropertyGroup>
 
   <ItemGroup>

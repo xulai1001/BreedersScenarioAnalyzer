@@ -36,13 +36,13 @@ public sealed class BreedersScenarioAnalyzer : IPlugin
         }
     }
 
-    public void Dispose()
+    public ValueTask DisposeAsync()
     {
         ScenarioHistory? retiringHistory;
         lock (lifecycleGate)
         {
             if (!accepting)
-                return;
+                return ValueTask.CompletedTask;
             accepting = false;
             retiringHistory = history;
             history = null;
@@ -51,6 +51,7 @@ public sealed class BreedersScenarioAnalyzer : IPlugin
             application = null;
         }
         retiringHistory?.Dispose();
+        return ValueTask.CompletedTask;
     }
 
     [ResponseAnalyzer<GameApi.SingleModeBreeders.CheckEvent>(1)]
